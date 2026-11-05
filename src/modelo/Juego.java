@@ -59,6 +59,12 @@ public class Juego {
         }
     }
 
+    // true si el ultimo input se puede responder sin esperar al proximo paso
+    public boolean puedeResponderYa(){
+        boolean jugando = estadoJuego.equals("INICIADO") || estadoJuego.equals("EN_CURSO");
+        return jugando && pacman.puedeGirarYa(laberinto);
+    }
+
     public void actualizar(){
         if (estadoJuego.equals("INICIADO")) {
             int x = pacman.getPosX();

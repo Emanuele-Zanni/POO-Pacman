@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 public class Fantasma extends Personaje {
-    private static final int DURACION_SUSTO = 25;
+    private static final int DURACION_SUSTO = 36;
     private static final String[] DIRECCIONES = {"ARRIBA", "ABAJO", "IZQUIERDA", "DERECHA"};
 
     private int color;
@@ -93,6 +93,11 @@ public class Fantasma extends Personaje {
         int dx = getPosX() + deltaColumna(dir) - pacman.getPosX();
         int dy = getPosY() + deltaFila(dir) - pacman.getPosY();
         return dx * dx + dy * dy;
+    }
+
+    // Pasos que le quedan asustado (0 si no lo esta)
+    public int getTiempoAsustado() {
+        return tiempoAsustado;
     }
 
     public String getEstado() {

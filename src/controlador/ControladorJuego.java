@@ -36,7 +36,15 @@ public class ControladorJuego {
     public void cambiarDireccion(String direccion) {
         juego.continuar();
         juego.ingresaInput(direccion);
+
+        boolean inmediato = juego.puedeResponderYa() && vista.aceptaPasoInmediato();
+        if (inmediato) {
+            juego.actualizar();
+        }
         actualizarVista();
+        if (inmediato) {
+            vista.reiniciarPasoPacman();
+        }
     }
 
     public void pausarReanudar() {

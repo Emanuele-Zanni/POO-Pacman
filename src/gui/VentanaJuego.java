@@ -27,19 +27,28 @@ public class VentanaJuego extends JFrame {
     private static final int MS_POR_TICK = 100;
     private static final int TICKS_PACMAN = 2;
     private static final int TICKS_FANTASMAS = 3;
+    private static final int MS_POR_FOTOGRAMA = 16;    // ~60 FPS para el desplazamiento suave
+
+    private static final int MS_PASO_PACMAN = TICKS_PACMAN * MS_POR_TICK;
+    private static final int MS_PASO_FANTASMAS = TICKS_FANTASMAS * MS_POR_TICK;
+    private static final int MAX_CELDAS_EN_COLA = 1;
 
     private final PanelInfo panelInfo;
     private final PanelTablero panelTablero;
-    private final Timer reloj;
-    private int tick;
+    private final Timer relojPacman;
+    private final Timer relojFantasmas;
+    private final Timer relojDibujo;
     private ControladorJuego controlador;
 
     public VentanaJuego() {
         super("POO Pacman");
 
         panelInfo = new PanelInfo();
-        panelTablero = new PanelTablero();
-        reloj = new Timer(MS_POR_TICK, e -> avanzarTick());
+        panelTablero = new PanelTablero(MS_PASO_PACMAN, MS_PASO_FANTASMAS);
+        relojPacman = new Timer(MS_PASO_PACMAN, e -> controlador.avanzarPacman());
+        relojFantasmas = new Timer(MS_PASO_FANTASMAS, e -> controlador.avanzarFantasmas());
+        relojDibujo = new Timer(MS_POR_FOTOGRAMA,
+                e -> panelTablero.animar((int) (System.currentTimeMillis() / MS_POR_TICK)));
 
         JLabel ayuda = new JLabel("Flechas/WASD mover  |  P pausa  |  R reiniciar  |  Esc salir", SwingConstants.CENTER);
         ayuda.setOpaque(true);
@@ -72,7 +81,23 @@ public class VentanaJuego extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
         requestFocusInWindow();
-        reloj.start();
+        relojPacman.start();
+        relojFantasmas.start();
+        relojDibujo.start();
+    }
+
+    // Limita la cola de movimientos: si a la animacion todavia le falta recorrer
+    // mas de MAX_CELDAS_EN_COLA celdas, el input no adelanta otro paso (la
+    // direccion queda guardada y se aplica en el proximo paso normal)
+    public boolean aceptaPasoInmediato() {
+        return panelTablero.msRestantesPacman() <= MAX_CELDAS_EN_COLA * MS_PASO_PACMAN;
+    }
+
+    // Pacman acaba de moverse por un input: su proximo paso llega justo cuando
+    // la animacion termine de alcanzar la celda nueva, asi mantiene la velocidad
+    public void reiniciarPasoPacman() {
+        relojPacman.setInitialDelay(Math.max(1, panelTablero.msRestantesPacman()));
+        relojPacman.restart();
     }
 
     // Recibe del controlador los datos del modelo y redibuja
@@ -83,21 +108,11 @@ public class VentanaJuego extends JFrame {
     }
 
     public void cerrar() {
-        reloj.stop();
+        relojPacman.stop();
+        relojFantasmas.stop();
+        relojDibujo.stop();
         dispose();
         System.exit(0);
-    }
-
-    private void avanzarTick() {
-        if (tick % TICKS_PACMAN == 0) {
-            controlador.avanzarPacman();
-        }
-        if (tick % TICKS_FANTASMAS == 0) {
-            controlador.avanzarFantasmas();
-        }
-
-        tick++;
-        panelTablero.animar(tick);
     }
 
     private void procesarTecla(int tecla) {
