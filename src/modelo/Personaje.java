@@ -44,6 +44,7 @@ public abstract class Personaje {
 
         posX += deltaColumna(direccion);
         posY += deltaFila(direccion);
+        posX = laberinto.ajustarColumna(posY, posX);   // tunel: aparece del otro lado
         progreso = 0;
         return true;
     }

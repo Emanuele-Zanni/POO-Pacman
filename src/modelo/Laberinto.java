@@ -45,7 +45,6 @@ public Laberinto() {
     columnas = MAPA[0].length;
     celdas = new Celda[filas][columnas];
 
-    // Las celdas se crean una sola vez: las paredes del mapa no cambian nunca
     for (int f = 0; f < filas; f++) {
         for (int c = 0; c < columnas; c++) {
             celdas[f][c] = new Celda(MAPA[f][c] == '1', "");
@@ -55,7 +54,23 @@ public Laberinto() {
     reiniciarLaberinto();
 }
 
+// Teletransporte: salir por un costado lleva al otro (Fila 9)
+private static final int FILA_TUNEL = 9;
+
+public int ajustarColumna(int fila, int columna) {
+    if (fila == FILA_TUNEL) {
+        if (columna < 0) {
+            return columnas - 1;
+        }
+        if (columna >= columnas) {
+            return 0;
+        }
+    }
+    return columna;
+}
+
 public boolean esPared(int fila, int columna) {
+    columna = ajustarColumna(fila, columna);
     if (!estaDentroDelMapa(fila, columna)) {
         return true;
     }
@@ -101,7 +116,6 @@ public int getCantPuntos() {
     return cantPuntos;
 }
 
-// Vuelve a poner los puntos y superpuntos en las mismas celdas (no crea celdas nuevas)
 public void reiniciarLaberinto() {
     cantPuntos = 0;
 

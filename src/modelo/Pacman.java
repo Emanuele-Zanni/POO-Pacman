@@ -42,11 +42,11 @@ public class Pacman extends Personaje {
 
     @Override
     public boolean mover(Laberinto laberinto) {
-        // La media vuelta se puede hacer en cualquier momento, sin perder velocidad
+        
         if (estaEnMovimiento() && direccionDeseada.equals(opuesta(getDireccion()))) {
             invertir();
         }
-        // Los giros solo se pueden hacer en el centro de una celda
+        
         if (estaEnCentro() && puedeMoverse(laberinto, direccionDeseada)) {
             setDireccion(direccionDeseada);
         }

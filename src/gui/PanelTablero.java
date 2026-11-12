@@ -28,7 +28,7 @@ public class PanelTablero extends JPanel {
     private static final Color ASUSTADO_FIN = Color.WHITE;
     private static final Color CARA_ASUSTADO_FIN = Color.RED;
     private static final int MS_AVISO_FIN_SUSTO = 3000;   // empieza a parpadear 3 sec antes
-    private static final int MS_PARPADEO = 200;           // duracion de cada color
+    private static final int MS_PARPADEO = 200;           // tiempo entre alternado de colores durante parpadeo
     private static final Color[] COLORES_FANTASMA = {
         Color.RED,
         new Color(255, 184, 255),
@@ -42,7 +42,7 @@ public class PanelTablero extends JPanel {
     private Fantasma[] fantasmas;
     private int puntaje;
     private String estado;
-    private int cuadro;     // contador para animar la boca y el parpadeo
+    private int cuadro;     // contador para animar la boca del Pacman y el parpadeo de los fantasmas
 
     private final int msPorTick;
 
@@ -85,7 +85,7 @@ public class PanelTablero extends JPanel {
         dibujarPacman(g2);
         dibujarCartel(g2);
 
-        // Envia el fotograma a la pantalla enseguida (evita tirones en algunos sistemas)
+        // Envia el fotograma a la pantalla enseguida para evitar tirones (cambio meramente estetico)
         Toolkit.getDefaultToolkit().sync();
     }
 
@@ -124,7 +124,6 @@ public class PanelTablero extends JPanel {
         int m = 3;
         int fin = TAM_CELDA - m;
 
-        // esPared() ya devuelve true fuera del mapa, asi que no hace falta chequear limites
         if (!laberinto.esPared(f - 1, c)) {
             g2.drawLine(x, y + m, x + TAM_CELDA, y + m);
         }
@@ -171,7 +170,6 @@ public class PanelTablero extends JPanel {
             int tam = TAM_CELDA - 4;
             boolean asustado = fantasma.getEstado().equals("ASUSTADO");
 
-            // Aviso: cuando le quedan pocos segundos asustado, alterna azul y blanco
             int msSustoRestante = fantasma.getTiempoAsustado() * msPorTick;
             boolean avisoFin = asustado && msSustoRestante <= MS_AVISO_FIN_SUSTO;
             boolean blanco = avisoFin && (System.currentTimeMillis() / MS_PARPADEO) % 2 == 0;
@@ -181,7 +179,6 @@ public class PanelTablero extends JPanel {
             g2.fillArc(x, y, tam, tam, 0, 180);
             g2.fillRect(x, y + tam / 2, tam, tam / 2 - 3);
 
-            // borde inferior ondulado
             int ancho = tam / 3;
             for (int onda = 0; onda < 3; onda++) {
                 g2.fillOval(x + onda * ancho, y + tam - 7, ancho, 7);
@@ -218,7 +215,7 @@ public class PanelTablero extends JPanel {
                 break;
             case "COMIDO":
                 titulo = "FUISTE COMIDO!";
-                subtitulo = "Vidas restantes: " + pacman.getVidas() + "  -  Toca cualquier tecla";
+                subtitulo = "Vidas restantes: " + pacman.getVidas() + "  -  ENTER para continuar";
                 break;
             case "GANADO":
                 titulo = "GANASTE!";

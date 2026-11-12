@@ -127,7 +127,8 @@ public class VentanaJuego extends JFrame {
             case KeyEvent.VK_RIGHT: case KeyEvent.VK_D: controlador.cambiarDireccion("DERECHA"); break;
             case KeyEvent.VK_P: controlador.pausarReanudar(); break;
             case KeyEvent.VK_R: controlador.reiniciar(); break;
-            default: controlador.continuar(); break;
+            case KeyEvent.VK_ENTER: controlador.continuar(); break;
+            default: break;
         }
     }
 }

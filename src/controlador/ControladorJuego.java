@@ -19,7 +19,7 @@ public class ControladorJuego {
         vista.iniciar();
     }
 
-    // --- Accion disparada por el reloj de la vista ---
+    // --- Clock/Reloj de la VISTA (motor) ---
 
     public void avanzar(int ticks) {
         for (int i = 0; i < ticks; i++) {
@@ -28,16 +28,14 @@ public class ControladorJuego {
         actualizarVista();
     }
 
-    // --- Acciones disparadas por el usuario ---
+    // --- ACCIONES DEL USUARIO ---
 
     public void cambiarDireccion(String direccion) {
-        juego.continuar();
         juego.ingresaInput(direccion);
         actualizarVista();
     }
 
     public void pausarReanudar() {
-        juego.continuar();
         juego.pausarReanudar();
         actualizarVista();
     }

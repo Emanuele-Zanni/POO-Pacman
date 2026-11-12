@@ -32,7 +32,6 @@ public class Juego {
 
     public void continuar(){
         if (estadoJuego.equals("COMIDO")) {
-            // Las posiciones se reinician recien ahora, asi el choque queda a la vista
             reiniciarPosiciones();
             estadoJuego = "INICIADO";
         }

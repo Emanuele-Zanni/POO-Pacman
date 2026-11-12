@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 public class Fantasma extends Personaje {
-    // Cuantas casillas alcanza a recorrer el fantasma mientras esta asustado
-    private static final int CASILLAS_SUSTO = 36;
+    //* Cuantas casillas alcanza a recorrer el fantasma mientras esta asustado
+    private static final int CASILLAS_SUSTO = 36; //* Esto equivale a 10,8 segundos aprox
     private static final String[] DIRECCIONES = {"ARRIBA", "ABAJO", "IZQUIERDA", "DERECHA"};
 
     private int color;
