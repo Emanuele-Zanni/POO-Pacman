@@ -79,6 +79,7 @@ public class VentanaJuego extends JFrame {
 
     public void iniciar() {
         pack();
+        // setSize(800, 650); //! Si se desea aplicar un tamaño arbitrario a la ventana  
         setLocationRelativeTo(null);
         setVisible(true);
         requestFocusInWindow();
