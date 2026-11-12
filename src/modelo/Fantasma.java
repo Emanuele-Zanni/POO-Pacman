@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 public class Fantasma extends Personaje {
-    private static final int DURACION_SUSTO = 36;
+    // Cuantas casillas alcanza a recorrer el fantasma mientras esta asustado
+    private static final int CASILLAS_SUSTO = 36;
     private static final String[] DIRECCIONES = {"ARRIBA", "ABAJO", "IZQUIERDA", "DERECHA"};
 
     private int color;
@@ -30,8 +31,8 @@ public class Fantasma extends Personaje {
 
     public void asustar(){
         estado = "ASUSTADO";
-        tiempoAsustado = DURACION_SUSTO;
-        setDireccion(opuesta(getDireccion()));
+        tiempoAsustado = CASILLAS_SUSTO * UNIDADES_POR_CELDA / getVelocidad();   // en ticks
+        invertir();
     }
 
     public void serComido(){
@@ -81,12 +82,13 @@ public class Fantasma extends Personaje {
     }
 
     @Override
-    public void mover(Laberinto laberinto) {
-        super.mover(laberinto);
+    public boolean mover(Laberinto laberinto) {
+        boolean llego = super.mover(laberinto);
 
         if ("ASUSTADO".equals(estado) && --tiempoAsustado <= 0) {
             estado = "NORMAL";
         }
+        return llego;
     }
 
     private int distancia(String dir, Pacman pacman) {
@@ -95,7 +97,7 @@ public class Fantasma extends Personaje {
         return dx * dx + dy * dy;
     }
 
-    // Pasos que le quedan asustado (0 si no lo esta)
+    // Ticks que le quedan asustado (0 si no lo esta)
     public int getTiempoAsustado() {
         return tiempoAsustado;
     }

@@ -8,6 +8,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 
 import javax.swing.JPanel;
 
@@ -15,10 +16,6 @@ import modelo.Fantasma;
 import modelo.Laberinto;
 import modelo.Pacman;
 
-/*
- * Dibuja el laberinto, los personajes y los carteles de estado.
- * Solo dibuja los datos que recibe del controlador.
- */
 public class PanelTablero extends JPanel {
 
     private static final int TAM_CELDA = 24;
@@ -30,7 +27,7 @@ public class PanelTablero extends JPanel {
     private static final Color ASUSTADO = new Color(33, 33, 255);
     private static final Color ASUSTADO_FIN = Color.WHITE;
     private static final Color CARA_ASUSTADO_FIN = Color.RED;
-    private static final int MS_AVISO_FIN_SUSTO = 3000;   // empieza a parpadear 3 s antes
+    private static final int MS_AVISO_FIN_SUSTO = 3000;   // empieza a parpadear 3 sec antes
     private static final int MS_PARPADEO = 200;           // duracion de cada color
     private static final Color[] COLORES_FANTASMA = {
         Color.RED,
@@ -47,20 +44,10 @@ public class PanelTablero extends JPanel {
     private String estado;
     private int cuadro;     // contador para animar la boca y el parpadeo
 
-    // Estado visual para el desplazamiento suave entre celdas
-    private final int msPasoFantasma;
-    private final Deslizamiento deslizPacman;
-    private Deslizamiento[] deslizFantasmas = new Deslizamiento[0];
+    private final int msPorTick;
 
-    // Lo que se ve en pantalla, que puede ir unos milisegundos detras del modelo
-    // para que los puntos, choques y carteles coincidan con la animacion
-    private String[][] contenidoVisible;
-    private boolean[] asustadoVisible = new boolean[0];
-    private String estadoVisible = "";
-
-    public PanelTablero(int msPasoPacman, int msPasoFantasma) {
-        this.msPasoFantasma = msPasoFantasma;
-        this.deslizPacman = new Deslizamiento(msPasoPacman);
+    public PanelTablero(int msPorTick) {
+        this.msPorTick = msPorTick;
         setBackground(FONDO);
     }
 
@@ -71,104 +58,8 @@ public class PanelTablero extends JPanel {
         this.fantasmas = fantasmas;
         this.puntaje = puntaje;
         this.estado = estado;
-
-        deslizPacman.irA(pacman.getPosX(), pacman.getPosY());
-        if (deslizFantasmas.length != fantasmas.length) {
-            deslizFantasmas = new Deslizamiento[fantasmas.length];
-            asustadoVisible = new boolean[fantasmas.length];
-            for (int i = 0; i < fantasmas.length; i++) {
-                deslizFantasmas[i] = new Deslizamiento(msPasoFantasma);
-            }
-        }
-        for (int i = 0; i < fantasmas.length; i++) {
-            deslizFantasmas[i].irA(fantasmas[i].getPosX(), fantasmas[i].getPosY());
-        }
-
-        actualizarContenidoVisible();
+        this.cuadro = (int) (System.currentTimeMillis() / 100);
         repaint();
-    }
-
-    // Los puntos que vuelven a aparecer (reinicio) se muestran enseguida;
-    // los que se comieron se siguen viendo hasta que Pacman llegue a ellos
-    private void actualizarContenidoVisible() {
-        int filas = laberinto.getFilas();
-        int columnas = laberinto.getColumnas();
-        if (contenidoVisible == null || contenidoVisible.length != filas) {
-            contenidoVisible = new String[filas][columnas];
-        }
-
-        for (int f = 0; f < filas; f++) {
-            for (int c = 0; c < columnas; c++) {
-                String real = laberinto.getContenido(f, c);
-                if (!real.isEmpty() || contenidoVisible[f][c] == null) {
-                    contenidoVisible[f][c] = real;
-                }
-            }
-        }
-    }
-
-    public void animar(int cuadro) {
-        this.cuadro = cuadro;
-        repaint();
-    }
-
-    public int msRestantesPacman() {
-        return deslizPacman.msRestantes();
-    }
-
-    private static boolean esperaAnimacion(String estado) {
-        return estado.equals("COMIDO") || estado.equals("GANADO") || estado.equals("PERDIDO");
-    }
-
-    // Decide que parte del modelo ya puede mostrarse segun como va la animacion
-    private void sincronizarVista() {
-        boolean algunoEnMovimiento = deslizPacman.enMovimiento();
-        for (Deslizamiento d : deslizFantasmas) {
-            algunoEnMovimiento |= d.enMovimiento();
-        }
-
-        if (esperaAnimacion(estado)) {
-            // Choque o fin de partida: primero se termina de ver el movimiento
-            if (!algunoEnMovimiento) {
-                deslizPacman.aplicarPendiente();
-                for (Deslizamiento d : deslizFantasmas) {
-                    d.aplicarPendiente();
-                }
-                estadoVisible = estado;
-            }
-        } else {
-            if (!deslizPacman.enMovimiento()) {
-                deslizPacman.aplicarPendiente();
-            }
-            // Un fantasma comido vuelve a su casa recien cuando Pacman lo alcanza
-            for (Deslizamiento d : deslizFantasmas) {
-                int x = d.getHastaX();
-                int y = d.getHastaY();
-                boolean pacmanLlego = !deslizPacman.vaHacia(x, y) || deslizPacman.distanciaA(x, y) < 0.5;
-                if (!d.enMovimiento() && pacmanLlego) {
-                    d.aplicarPendiente();
-                }
-            }
-            estadoVisible = estado;
-        }
-
-        for (int i = 0; i < fantasmas.length; i++) {
-            if (!deslizFantasmas[i].tienePendiente()) {
-                asustadoVisible[i] = fantasmas[i].getEstado().equals("ASUSTADO");
-            }
-        }
-
-        // Pacman se come el punto cuando visualmente llega a la celda
-        for (int f = 0; f < contenidoVisible.length; f++) {
-            for (int c = 0; c < contenidoVisible[f].length; c++) {
-                if (contenidoVisible[f][c].isEmpty() || !laberinto.getContenido(f, c).isEmpty()) {
-                    continue;
-                }
-                if (!deslizPacman.vaHacia(c, f) || deslizPacman.distanciaA(c, f) < 0.5) {
-                    contenidoVisible[f][c] = "";
-                }
-            }
-        }
     }
 
     @Override
@@ -187,13 +78,15 @@ public class PanelTablero extends JPanel {
         }
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        sincronizarVista();
+        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
         dibujarLaberinto(g2);
         dibujarFantasmas(g2);
         dibujarPacman(g2);
         dibujarCartel(g2);
+
+        // Envia el fotograma a la pantalla enseguida (evita tirones en algunos sistemas)
+        Toolkit.getDefaultToolkit().sync();
     }
 
     private void dibujarLaberinto(Graphics2D g2) {
@@ -208,7 +101,7 @@ public class PanelTablero extends JPanel {
                 }
 
                 g2.setColor(PUNTO);
-                switch (contenidoVisible[f][c]) {
+                switch (laberinto.getContenido(f, c)) {
                     case "PUNTO":
                         g2.fillOval(x + TAM_CELDA / 2 - 2, y + TAM_CELDA / 2 - 2, 4, 4);
                         break;
@@ -246,8 +139,8 @@ public class PanelTablero extends JPanel {
     }
 
     private void dibujarPacman(Graphics2D g2) {
-        int x = aPixel(deslizPacman.getX());
-        int y = aPixel(deslizPacman.getY());
+        double px = aPixel(pacman.getX());
+        double py = aPixel(pacman.getY());
         int tam = TAM_CELDA - 4;
 
         int apertura = cuadro % 2 == 0 ? 50 : 10;
@@ -259,20 +152,26 @@ public class PanelTablero extends JPanel {
             default:          angulo = 0; break;
         }
 
+        // Se dibuja en coordenadas con decimales (subpixel) para que el movimiento sea continuo
+        g2.translate(px, py);
         g2.setColor(PACMAN);
-        g2.fillArc(x, y, tam, tam, angulo + apertura / 2, 360 - apertura);
+        g2.fillArc(0, 0, tam, tam, angulo + apertura / 2, 360 - apertura);
+        g2.translate(-px, -py);
     }
 
     private void dibujarFantasmas(Graphics2D g2) {
         for (int i = 0; i < fantasmas.length; i++) {
             Fantasma fantasma = fantasmas[i];
-            int x = aPixel(deslizFantasmas[i].getX());
-            int y = aPixel(deslizFantasmas[i].getY());
+            double px = aPixel(fantasma.getX());
+            double py = aPixel(fantasma.getY());
+            g2.translate(px, py);
+            int x = 0;
+            int y = 0;
             int tam = TAM_CELDA - 4;
-            boolean asustado = asustadoVisible[i];
+            boolean asustado = fantasma.getEstado().equals("ASUSTADO");
 
             // Aviso: cuando le quedan pocos segundos asustado, alterna azul y blanco
-            int msSustoRestante = fantasma.getTiempoAsustado() * msPasoFantasma;
+            int msSustoRestante = fantasma.getTiempoAsustado() * msPorTick;
             boolean avisoFin = asustado && msSustoRestante <= MS_AVISO_FIN_SUSTO;
             boolean blanco = avisoFin && (System.currentTimeMillis() / MS_PARPADEO) % 2 == 0;
 
@@ -299,6 +198,7 @@ public class PanelTablero extends JPanel {
                 g2.fillOval(x + 5, y + 7, 3, 3);
                 g2.fillOval(x + tam - 7, y + 7, 3, 3);
             }
+            g2.translate(-px, -py);
         }
     }
 
@@ -306,7 +206,7 @@ public class PanelTablero extends JPanel {
         String titulo;
         String subtitulo;
 
-        switch (estadoVisible) {
+        switch (estado) {
             case "INICIADO":
                 titulo = "LISTO!";
                 subtitulo = "Presiona una direccion para empezar";
@@ -321,7 +221,7 @@ public class PanelTablero extends JPanel {
                 break;
             case "GANADO":
                 titulo = "GANASTE!";
-                subtitulo = "Puntaje: " + puntaje + "  -  R para jugar de nuevo";
+                subtitulo = "Puntaje: " + puntaje + "  -  R para el siguiente laberinto";
                 break;
             case "PERDIDO":
                 titulo = "GAME OVER";
@@ -331,7 +231,7 @@ public class PanelTablero extends JPanel {
                 return;
         }
 
-        boolean tapaTablero = !estadoVisible.equals("INICIADO");
+        boolean tapaTablero = !estado.equals("INICIADO");
         if (tapaTablero) {
             g2.setColor(new Color(0, 0, 0, 170));
             g2.fillRect(0, 0, getWidth(), getHeight());
@@ -348,8 +248,8 @@ public class PanelTablero extends JPanel {
     }
 
     // Convierte una posicion en celdas (puede ser fraccionaria) a pixeles
-    private static int aPixel(double celda) {
-        return (int) Math.round(celda * TAM_CELDA) + 2;
+    private static double aPixel(double celda) {
+        return celda * TAM_CELDA + 2;
     }
 
     private void dibujarCentrado(Graphics2D g2, String texto, int y) {

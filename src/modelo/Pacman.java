@@ -46,22 +46,17 @@ public class Pacman extends Personaje {
         this.direccionDeseada = direccion;
     }
 
-    // true si la direccion pedida puede aplicarse ya mismo:
-    // esta detenido (contra una pared o sin direccion) o quiere dar media vuelta
-    public boolean puedeGirarYa(Laberinto laberinto) {
-        if (!puedeMoverse(laberinto, direccionDeseada)) {
-            return false;
-        }
-        return !puedeMoverse(laberinto, getDireccion())
-            || direccionDeseada.equals(opuesta(getDireccion()));
-    }
-
     @Override
-    public void mover(Laberinto laberinto) {
-        if (puedeMoverse(laberinto, direccionDeseada)) {
+    public boolean mover(Laberinto laberinto) {
+        // La media vuelta se puede hacer en cualquier momento, sin perder velocidad
+        if (estaEnMovimiento() && direccionDeseada.equals(opuesta(getDireccion()))) {
+            invertir();
+        }
+        // Los giros solo se pueden hacer en el centro de una celda
+        if (estaEnCentro() && puedeMoverse(laberinto, direccionDeseada)) {
             setDireccion(direccionDeseada);
         }
-        super.mover(laberinto);
+        return super.mover(laberinto);
     }
 
     public int getVidas() {

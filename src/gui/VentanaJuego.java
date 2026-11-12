@@ -24,31 +24,32 @@ import modelo.Pacman;
  */
 public class VentanaJuego extends JFrame {
 
-    private static final int MS_POR_TICK = 100;
-    private static final int TICKS_PACMAN = 2;
-    private static final int TICKS_FANTASMAS = 3;
-    private static final int MS_POR_FOTOGRAMA = 16;    // ~60 FPS para el desplazamiento suave
+    // Cada tick el modelo avanza a los personajes una fraccion de casilla.
+    // Con 5 ms (200 ticks por segundo): Pacman (velocidad 3) tarda 200 ms por casilla
+    // y los fantasmas (velocidad 2) 300 ms.
+    private static final int MS_POR_TICK = 5;
+    private static final long NS_POR_TICK = MS_POR_TICK * 1_000_000L;
 
-    private static final int MS_PASO_PACMAN = TICKS_PACMAN * MS_POR_TICK;
-    private static final int MS_PASO_FANTASMAS = TICKS_FANTASMAS * MS_POR_TICK;
-    private static final int MAX_CELDAS_EN_COLA = 1;
+    // El reloj de dibujo dispara lo mas seguido posible; la logica no depende de el
+    private static final int MS_POR_FOTOGRAMA = 4;
+    private static final int MAX_TICKS_POR_FOTOGRAMA = 20;   // evita "saltos" si la ventana se congela
 
     private final PanelInfo panelInfo;
     private final PanelTablero panelTablero;
-    private final Timer relojPacman;
-    private final Timer relojFantasmas;
-    private final Timer relojDibujo;
+    private final Timer reloj;
     private ControladorJuego controlador;
+
+    // Bucle de paso fijo: acumula el tiempo real y ejecuta los ticks que correspondan
+    private long ultimoInstante;
+    private long tiempoAcumulado;
 
     public VentanaJuego() {
         super("POO Pacman");
 
         panelInfo = new PanelInfo();
-        panelTablero = new PanelTablero(MS_PASO_PACMAN, MS_PASO_FANTASMAS);
-        relojPacman = new Timer(MS_PASO_PACMAN, e -> controlador.avanzarPacman());
-        relojFantasmas = new Timer(MS_PASO_FANTASMAS, e -> controlador.avanzarFantasmas());
-        relojDibujo = new Timer(MS_POR_FOTOGRAMA,
-                e -> panelTablero.animar((int) (System.currentTimeMillis() / MS_POR_TICK)));
+        panelTablero = new PanelTablero(MS_POR_TICK);
+        reloj = new Timer(MS_POR_FOTOGRAMA, e -> fotograma());
+        reloj.setCoalesce(true);
 
         JLabel ayuda = new JLabel("Flechas/WASD mover  |  P pausa  |  R reiniciar  |  Esc salir", SwingConstants.CENTER);
         ayuda.setOpaque(true);
@@ -81,23 +82,27 @@ public class VentanaJuego extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
         requestFocusInWindow();
-        relojPacman.start();
-        relojFantasmas.start();
-        relojDibujo.start();
+        ultimoInstante = System.nanoTime();
+        reloj.start();
     }
 
-    // Limita la cola de movimientos: si a la animacion todavia le falta recorrer
-    // mas de MAX_CELDAS_EN_COLA celdas, el input no adelanta otro paso (la
-    // direccion queda guardada y se aplica en el proximo paso normal)
-    public boolean aceptaPasoInmediato() {
-        return panelTablero.msRestantesPacman() <= MAX_CELDAS_EN_COLA * MS_PASO_PACMAN;
-    }
+    // Se ejecuta en cada disparo del reloj: avanza el juego segun el tiempo
+    // real transcurrido (no segun cuantas veces disparo el reloj) y redibuja
+    private void fotograma() {
+        long ahora = System.nanoTime();
+        tiempoAcumulado += ahora - ultimoInstante;
+        ultimoInstante = ahora;
 
-    // Pacman acaba de moverse por un input: su proximo paso llega justo cuando
-    // la animacion termine de alcanzar la celda nueva, asi mantiene la velocidad
-    public void reiniciarPasoPacman() {
-        relojPacman.setInitialDelay(Math.max(1, panelTablero.msRestantesPacman()));
-        relojPacman.restart();
+        int ticks = (int) Math.min(tiempoAcumulado / NS_POR_TICK, MAX_TICKS_POR_FOTOGRAMA);
+        if (ticks == MAX_TICKS_POR_FOTOGRAMA) {
+            tiempoAcumulado = 0;
+        } else {
+            tiempoAcumulado -= ticks * NS_POR_TICK;
+        }
+
+        if (ticks > 0) {
+            controlador.avanzar(ticks);
+        }
     }
 
     // Recibe del controlador los datos del modelo y redibuja
@@ -108,9 +113,7 @@ public class VentanaJuego extends JFrame {
     }
 
     public void cerrar() {
-        relojPacman.stop();
-        relojFantasmas.stop();
-        relojDibujo.stop();
+        reloj.stop();
         dispose();
         System.exit(0);
     }

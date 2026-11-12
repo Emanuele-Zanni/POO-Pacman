@@ -19,15 +19,12 @@ public class ControladorJuego {
         vista.iniciar();
     }
 
-    // --- Acciones disparadas por el reloj de la vista ---
+    // --- Accion disparada por el reloj de la vista ---
 
-    public void avanzarPacman() {
-        juego.actualizar();
-        actualizarVista();
-    }
-
-    public void avanzarFantasmas() {
-        juego.moverFantasmas();
+    public void avanzar(int ticks) {
+        for (int i = 0; i < ticks; i++) {
+            juego.actualizar();
+        }
         actualizarVista();
     }
 
@@ -36,15 +33,7 @@ public class ControladorJuego {
     public void cambiarDireccion(String direccion) {
         juego.continuar();
         juego.ingresaInput(direccion);
-
-        boolean inmediato = juego.puedeResponderYa() && vista.aceptaPasoInmediato();
-        if (inmediato) {
-            juego.actualizar();
-        }
         actualizarVista();
-        if (inmediato) {
-            vista.reiniciarPasoPacman();
-        }
     }
 
     public void pausarReanudar() {

@@ -13,21 +13,20 @@ import modelo.Pacman;
 
 public class TestConsola {
 
-    private static final int MS_POR_TICK = 100;
-    private static final int TICKS_PACMAN = 2;
-    private static final int TICKS_FANTASMAS = 3;
+    private static final int MS_POR_TICK = 5;
+    private static final int TICKS_POR_DIBUJO = 20;  // redibuja la consola cada 100 ms
 
     private static final Queue<String> teclas = new ConcurrentLinkedQueue<>();
     private static volatile Process lectorPowershell;
     private static volatile boolean modoLineas = false;
 
     public static void main(String[] args) throws InterruptedException {
-        Pacman pacman = new Pacman(3, 14, 15, 1);
+        Pacman pacman = new Pacman(3, 14, 15, 3);
         Fantasma[] fantasmas = {
-            new Fantasma(0, 14, 9, 0, "NORMAL", 12, 9, 1),
-            new Fantasma(1, 14, 9, 0, "NORMAL", 13, 9, 1),
-            new Fantasma(2, 14, 9, 0, "NORMAL", 15, 9, 1),
-            new Fantasma(3, 14, 9, 0, "NORMAL", 16, 9, 1)
+            new Fantasma(0, 14, 9, 0, "NORMAL", 12, 9, 2),
+            new Fantasma(1, 14, 9, 0, "NORMAL", 13, 9, 2),
+            new Fantasma(2, 14, 9, 0, "NORMAL", 15, 9, 2),
+            new Fantasma(3, 14, 9, 0, "NORMAL", 16, 9, 2)
         };
         Juego juego = new Juego(new Laberinto(), pacman, fantasmas);
 
@@ -45,14 +44,11 @@ public class TestConsola {
                 salir |= procesarTecla(juego, tecla);
             }
 
-            if (tick % TICKS_PACMAN == 0) {
-                juego.actualizar();
-            }
-            if (tick % TICKS_FANTASMAS == 0) {
-                juego.moverFantasmas();
-            }
+            juego.actualizar();
 
-            dibujar(juego, tick);
+            if (tick % TICKS_POR_DIBUJO == 0) {
+                dibujar(juego, tick / TICKS_POR_DIBUJO);
+            }
             tick++;
             Thread.sleep(MS_POR_TICK);
         }
