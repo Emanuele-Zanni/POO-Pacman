@@ -45,6 +45,13 @@ public Laberinto() {
     columnas = MAPA[0].length;
     celdas = new Celda[filas][columnas];
 
+    // Las celdas se crean una sola vez: las paredes del mapa no cambian nunca
+    for (int f = 0; f < filas; f++) {
+        for (int c = 0; c < columnas; c++) {
+            celdas[f][c] = new Celda(MAPA[f][c] == '1', "");
+        }
+    }
+
     reiniciarLaberinto();
 }
 
@@ -67,7 +74,7 @@ public String consumir(int fila, int columna) {
     if ("PUNTO".equals(contenido)
             || "SUPERPUNTO".equals(contenido)) {
         cantPuntos--;
-        celda.removerItem(contenido);
+        celda.setContenido("");
         return contenido;
     }
 
@@ -94,6 +101,7 @@ public int getCantPuntos() {
     return cantPuntos;
 }
 
+// Vuelve a poner los puntos y superpuntos en las mismas celdas (no crea celdas nuevas)
 public void reiniciarLaberinto() {
     cantPuntos = 0;
 
@@ -101,13 +109,11 @@ public void reiniciarLaberinto() {
         for (int c = 0; c < columnas; c++) {
             char elemento = MAPA[f][c];
 
-            if (elemento == '1') {
-                celdas[f][c] = new Celda(true, "");
-            } else if (elemento == '*') {
-                celdas[f][c] = new Celda(false, "SUPERPUNTO");
+            if (elemento == '*') {
+                celdas[f][c].setContenido("SUPERPUNTO");
                 cantPuntos++;
             } else if (elemento == ' ') {
-                celdas[f][c] = new Celda(false, "PUNTO");
+                celdas[f][c].setContenido("PUNTO");
                 cantPuntos++;
             }
         }

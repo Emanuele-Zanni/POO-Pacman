@@ -18,12 +18,12 @@ public class App {
     }
 
     private static Juego crearJuego() {
-        Pacman pacman = new Pacman(3, 14, 15, 3);
+        Pacman pacman = new Pacman(14, 15, 3);
         Fantasma[] fantasmas = {
-            new Fantasma(0, 14, 9, 0, "NORMAL", 12, 9, 2),
-            new Fantasma(1, 14, 9, 0, "NORMAL", 13, 9, 2),
-            new Fantasma(2, 14, 9, 0, "NORMAL", 15, 9, 2),
-            new Fantasma(3, 14, 9, 0, "NORMAL", 16, 9, 2)
+            new Fantasma(0, 14, 9, 12, 9, 2),
+            new Fantasma(1, 14, 9, 13, 9, 2),
+            new Fantasma(2, 14, 9, 15, 9, 2),
+            new Fantasma(3, 14, 9, 16, 9, 2)
         };
         return new Juego(new Laberinto(), pacman, fantasmas);
     }

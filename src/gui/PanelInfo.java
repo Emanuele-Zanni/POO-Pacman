@@ -8,9 +8,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-/*
- * Barra superior con puntaje, vidas y estado de la partida.
- */
 public class PanelInfo extends JPanel {
 
     private final JLabel puntaje = crearEtiqueta();

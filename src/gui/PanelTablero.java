@@ -96,7 +96,7 @@ public class PanelTablero extends JPanel {
                 int y = f * TAM_CELDA;
 
                 if (laberinto.esPared(f, c)) {
-                    dibujarPared(g2, laberinto, f, c, x, y);
+                    dibujarPared(g2, f, c, x, y);
                     continue;
                 }
 
@@ -118,22 +118,23 @@ public class PanelTablero extends JPanel {
     }
 
     // Traza solo los bordes de la pared que dan a un pasillo
-    private void dibujarPared(Graphics2D g2, Laberinto laberinto, int f, int c, int x, int y) {
+    private void dibujarPared(Graphics2D g2, int f, int c, int x, int y) {
         g2.setColor(PARED);
         g2.setStroke(new BasicStroke(2));
         int m = 3;
         int fin = TAM_CELDA - m;
 
-        if (!laberinto.esPared(f - 1, c) && f > 0) {
+        // esPared() ya devuelve true fuera del mapa, asi que no hace falta chequear limites
+        if (!laberinto.esPared(f - 1, c)) {
             g2.drawLine(x, y + m, x + TAM_CELDA, y + m);
         }
-        if (!laberinto.esPared(f + 1, c) && f < laberinto.getFilas() - 1) {
+        if (!laberinto.esPared(f + 1, c)) {
             g2.drawLine(x, y + fin, x + TAM_CELDA, y + fin);
         }
-        if (!laberinto.esPared(f, c - 1) && c > 0) {
+        if (!laberinto.esPared(f, c - 1)) {
             g2.drawLine(x + m, y, x + m, y + TAM_CELDA);
         }
-        if (!laberinto.esPared(f, c + 1) && c < laberinto.getColumnas() - 1) {
+        if (!laberinto.esPared(f, c + 1)) {
             g2.drawLine(x + fin, y, x + fin, y + TAM_CELDA);
         }
     }

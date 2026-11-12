@@ -12,14 +12,23 @@ public abstract class Personaje {
     private int progreso;   // 0 = en el centro de la celda; avanza hacia la vecina en "direccion"
     private int velocidad;
     private String direccion;   // "ARRIBA", "ABAJO", "IZQUIERDA", "DERECHA" o "NINGUNA"
+    private int posInicialX;    // celda donde arranca (y a la que vuelve al reiniciar)
+    private int posInicialY;
 
-    public Personaje(int posX, int posY, int velocidad, String direccion){
-        this.posX = posX;
-        this.posY = posY;
+    public Personaje(int posInicialX, int posInicialY, int velocidad){
+        this.posInicialX = posInicialX;
+        this.posInicialY = posInicialY;
+        this.posX = posInicialX;
+        this.posY = posInicialY;
         this.progreso = 0;
         this.velocidad = velocidad;
-        this.direccion = direccion;
+        this.direccion = "NINGUNA";   // todo personaje arranca quieto
 
+    }
+
+    // Vuelve a la celda de inicio, quieto. Cada subclase lo extiende con lo suyo
+    public void reiniciarPos() {
+        colocarEn(posInicialX, posInicialY);
     }
 
     // Avanza un tick. Devuelve true si en este tick completo la llegada a una celda nueva

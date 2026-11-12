@@ -46,7 +46,7 @@ public class Juego {
         laberinto.reiniciarLaberinto();
         reiniciarPosiciones();
         if (!gano) {
-            pacman.reiniciar();
+            pacman.reiniciarVidas();
             puntaje = 0;
         }
         estadoJuego = "INICIADO";

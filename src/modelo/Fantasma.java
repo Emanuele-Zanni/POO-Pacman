@@ -14,19 +14,15 @@ public class Fantasma extends Personaje {
     private int PosCasaInicialY;
     private int tiempoAsustado;
     private String estado;
-    private int PosInicialX;
-    private int PosInicialY;
     private Random azar = new Random();
 
-    public Fantasma(int color, int PosCasaInicialX, int PosCasaInicialY, int tiempoAsustado, String estado, int PosInicialX, int PosInicialY, int velocidad){
-        super(PosInicialX, PosInicialY, velocidad, "NINGUNA");
+    public Fantasma(int color, int PosCasaInicialX, int PosCasaInicialY, int PosInicialX, int PosInicialY, int velocidad){
+        super(PosInicialX, PosInicialY, velocidad);
         this.color = color;
         this.PosCasaInicialX = PosCasaInicialX;
         this.PosCasaInicialY = PosCasaInicialY;
         this.tiempoAsustado = 0;
         this.estado = "NORMAL";
-        this.PosInicialX = PosInicialX;
-        this.PosInicialY = PosInicialY;
     }
 
     public void asustar(){
@@ -37,8 +33,7 @@ public class Fantasma extends Personaje {
 
     public void serComido(){
         colocarEn(PosCasaInicialX, PosCasaInicialY);
-        estado = "NORMAL";
-        tiempoAsustado = 0;
+        quitarSusto();
     }
 
     public void decidirCruce(Laberinto laberinto, Pacman pacman){
@@ -75,8 +70,13 @@ public class Fantasma extends Personaje {
         setDireccion(mejor);
     }
 
+    @Override
     public void reiniciarPos(){
-        colocarEn(PosInicialX, PosInicialY);
+        super.reiniciarPos();
+        quitarSusto();
+    }
+
+    private void quitarSusto() {
         estado = "NORMAL";
         tiempoAsustado = 0;
     }

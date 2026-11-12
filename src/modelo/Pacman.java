@@ -5,21 +5,15 @@ package modelo;
 public class Pacman extends Personaje {
 
 
-    private int vidas = 3;
-    private int vidasIniciales = 3;
-    private int PosInicialX = 0;
-    private int PosInicialY = 0;
+    private static final int VIDAS_INICIALES = 3;
+
+    private int vidas;
     private String direccionDeseada;
 
-    public Pacman(int vidas, int PosInicialX, int PosInicialY, int velocidad){
-        super(PosInicialX, PosInicialY, velocidad, "NINGUNA");
-        this.vidas = vidas;
-        this.vidasIniciales = vidas;
-        this.PosInicialX = PosInicialX;
-        this.PosInicialY = PosInicialY;
+    public Pacman(int PosInicialX, int PosInicialY, int velocidad){
+        super(PosInicialX, PosInicialY, velocidad);
+        this.vidas = VIDAS_INICIALES;
         this.direccionDeseada = "NINGUNA";
-
-
     }
 
     public void restarVida(){
@@ -32,14 +26,14 @@ public class Pacman extends Personaje {
         return vidas > 0;
     }
 
+    @Override
     public void reiniciarPos(){
-        colocarEn(PosInicialX, PosInicialY);
+        super.reiniciarPos();
         direccionDeseada = "NINGUNA";
     }
 
-    public void reiniciar(){
-        vidas = vidasIniciales;
-        reiniciarPos();
+    public void reiniciarVidas(){
+        vidas = VIDAS_INICIALES;
     }
 
     public void setDirDeseada(String direccion){
