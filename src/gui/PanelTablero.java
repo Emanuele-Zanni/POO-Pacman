@@ -12,9 +12,9 @@ import java.awt.Toolkit;
 
 import javax.swing.JPanel;
 
-import modelo.Fantasma;
-import modelo.Laberinto;
-import modelo.Pacman;
+import DTOs.FantasmaDTO;
+import DTOs.LaberintoDTO;
+import DTOs.PacmanDTO;
 
 public class PanelTablero extends JPanel {
 
@@ -37,9 +37,9 @@ public class PanelTablero extends JPanel {
     };
 
     // Datos recibidos del controlador
-    private Laberinto laberinto;
-    private Pacman pacman;
-    private Fantasma[] fantasmas;
+    private LaberintoDTO laberinto;
+    private PacmanDTO pacman;
+    private FantasmaDTO[] fantasmas;
     private int puntaje;
     private String estado;
     private int cuadro;     // contador para animar la boca del Pacman y el parpadeo de los fantasmas
@@ -51,7 +51,7 @@ public class PanelTablero extends JPanel {
         setBackground(FONDO);
     }
 
-    public void actualizar(Laberinto laberinto, Pacman pacman, Fantasma[] fantasmas,
+    public void actualizar(LaberintoDTO laberinto, PacmanDTO pacman, FantasmaDTO[] fantasmas,
                            int puntaje, String estado) {
         this.laberinto = laberinto;
         this.pacman = pacman;
@@ -161,7 +161,7 @@ public class PanelTablero extends JPanel {
 
     private void dibujarFantasmas(Graphics2D g2) {
         for (int i = 0; i < fantasmas.length; i++) {
-            Fantasma fantasma = fantasmas[i];
+            FantasmaDTO fantasma = fantasmas[i];
             double px = aPixel(fantasma.getX());
             double py = aPixel(fantasma.getY());
             g2.translate(px, py);

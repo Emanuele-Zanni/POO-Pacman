@@ -11,9 +11,10 @@ public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             Juego juego = crearJuego();
-            VentanaJuego vista = new VentanaJuego();
-            ControladorJuego controlador = new ControladorJuego(juego, vista);
-            controlador.iniciar();
+            // Cada capa recibe solo a la siguiente: Ventana -> Controlador -> Juego
+            ControladorJuego controlador = new ControladorJuego(juego);
+            VentanaJuego vista = new VentanaJuego(controlador);
+            vista.iniciar();
         });
     }
 

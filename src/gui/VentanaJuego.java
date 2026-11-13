@@ -12,15 +12,13 @@ import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
+import DTOs.InfoJuegoDTO;
 import controlador.ControladorJuego;
-import modelo.Fantasma;
-import modelo.Laberinto;
-import modelo.Pacman;
 
 /*
  * Ventana principal (vista). Maneja todo lo de Swing: los paneles,
  * el teclado y el reloj (ticks). Traduce esos eventos en llamadas al
- * controlador y redibuja con los datos que el controlador le envia.
+ * controlador y redibuja con los datos que el controlador le devuelve.
  */
 public class VentanaJuego extends JFrame {
 
@@ -37,14 +35,15 @@ public class VentanaJuego extends JFrame {
     private final PanelInfo panelInfo;
     private final PanelTablero panelTablero;
     private final Timer reloj;
-    private ControladorJuego controlador;
+    private final ControladorJuego controlador;
 
     // Bucle de paso fijo: acumula el tiempo real y ejecuta los ticks que correspondan
     private long ultimoInstante;
     private long tiempoAcumulado;
 
-    public VentanaJuego() {
+    public VentanaJuego(ControladorJuego controlador) {
         super("POO Pacman");
+        this.controlador = controlador;
 
         panelInfo = new PanelInfo();
         panelTablero = new PanelTablero(MS_POR_TICK);
@@ -73,11 +72,8 @@ public class VentanaJuego extends JFrame {
         });
     }
 
-    public void setControlador(ControladorJuego controlador) {
-        this.controlador = controlador;
-    }
-
     public void iniciar() {
+        mostrar(controlador.iniciar());   // el tablero necesita el laberinto para saber su tamaño antes de pack()
         pack();
         // setSize(800, 650); //! Si se desea aplicar un tamaño arbitrario a la ventana  
         setLocationRelativeTo(null);
@@ -101,16 +97,14 @@ public class VentanaJuego extends JFrame {
             tiempoAcumulado -= ticks * NS_POR_TICK;
         }
 
-        if (ticks > 0) {
-            controlador.avanzar(ticks);
-        }
+        // Aunque no haya ticks se redibuja, para que sigan las animaciones (boca, parpadeo)
+        mostrar(controlador.avanzar(ticks));
     }
 
-    // Recibe del controlador los datos del modelo y redibuja
-    public void actualizar(Laberinto laberinto, Pacman pacman, Fantasma[] fantasmas,
-                           int puntaje, String estado) {
-        panelInfo.actualizar(puntaje, estado, pacman.getVidas());
-        panelTablero.actualizar(laberinto, pacman, fantasmas, puntaje, estado);
+    private void mostrar(InfoJuegoDTO info) {
+        panelInfo.actualizar(info.getPuntaje(), info.getEstado(), info.getPacman().getVidas());
+        panelTablero.actualizar(info.getLaberinto(), info.getPacman(), info.getFantasmas(),
+                                info.getPuntaje(), info.getEstado());
     }
 
     public void cerrar() {
@@ -120,16 +114,18 @@ public class VentanaJuego extends JFrame {
     }
 
     private void procesarTecla(int tecla) {
+        InfoJuegoDTO info;
         switch (tecla) {
-            case KeyEvent.VK_ESCAPE: controlador.salir(); break;
-            case KeyEvent.VK_UP:    case KeyEvent.VK_W: controlador.cambiarDireccion("ARRIBA"); break;
-            case KeyEvent.VK_DOWN:  case KeyEvent.VK_S: controlador.cambiarDireccion("ABAJO"); break;
-            case KeyEvent.VK_LEFT:  case KeyEvent.VK_A: controlador.cambiarDireccion("IZQUIERDA"); break;
-            case KeyEvent.VK_RIGHT: case KeyEvent.VK_D: controlador.cambiarDireccion("DERECHA"); break;
-            case KeyEvent.VK_P: controlador.pausarReanudar(); break;
-            case KeyEvent.VK_R: controlador.reiniciar(); break;
-            case KeyEvent.VK_ENTER: controlador.continuar(); break;
-            default: break;
+            case KeyEvent.VK_ESCAPE: cerrar(); return;   // cerrar la ventana es tarea de la vista
+            case KeyEvent.VK_UP:    case KeyEvent.VK_W: info = controlador.cambiarDireccion("ARRIBA"); break;
+            case KeyEvent.VK_DOWN:  case KeyEvent.VK_S: info = controlador.cambiarDireccion("ABAJO"); break;
+            case KeyEvent.VK_LEFT:  case KeyEvent.VK_A: info = controlador.cambiarDireccion("IZQUIERDA"); break;
+            case KeyEvent.VK_RIGHT: case KeyEvent.VK_D: info = controlador.cambiarDireccion("DERECHA"); break;
+            case KeyEvent.VK_P: info = controlador.pausarReanudar(); break;
+            case KeyEvent.VK_R: info = controlador.reiniciar(); break;
+            case KeyEvent.VK_ENTER: info = controlador.continuar(); break;
+            default: return;   // tecla sin uso: no se le pide nada al controlador
         }
+        mostrar(info);
     }
 }
