@@ -2,12 +2,19 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
@@ -25,8 +32,10 @@ public class VentanaJuego extends JFrame {
     // Cada tick el modelo avanza a los personajes una fraccion de casilla.
     // Con 5 ms (200 ticks por segundo): Pacman (velocidad 3) tarda 200 ms por casilla
     // y los fantasmas (velocidad 2) 300 ms.
-    private static final int MS_POR_TICK = 5;
-    private static final long NS_POR_TICK = MS_POR_TICK * 1_000_000L;
+    private static final int MIN_MS_POR_TICK = 1;
+    private static final int MAX_MS_POR_TICK = 100;
+    private int msPorTick = 5;
+    private long nsPorTick = msPorTick * 1_000_000L;
 
     // El reloj de dibujo dispara lo mas seguido posible; la logica no depende de el
     private static final int MS_POR_FOTOGRAMA = 4;
@@ -35,6 +44,7 @@ public class VentanaJuego extends JFrame {
     private final PanelInfo panelInfo;
     private final PanelTablero panelTablero;
     private final Timer reloj;
+    private final JTextField campoMsTick;
     private final ControladorJuego controlador;
 
     // Bucle de paso fijo: acumula el tiempo real y ejecuta los ticks que correspondan
@@ -46,7 +56,7 @@ public class VentanaJuego extends JFrame {
         this.controlador = controlador;
 
         panelInfo = new PanelInfo();
-        panelTablero = new PanelTablero(MS_POR_TICK);
+        panelTablero = new PanelTablero(msPorTick);
         reloj = new Timer(MS_POR_FOTOGRAMA, e -> fotograma());
         reloj.setCoalesce(true);
 
@@ -59,7 +69,45 @@ public class VentanaJuego extends JFrame {
         setLayout(new BorderLayout());
         add(panelInfo, BorderLayout.NORTH);
         add(panelTablero, BorderLayout.CENTER);
-        add(ayuda, BorderLayout.SOUTH);
+
+        JLabel etiquetaMs = new JLabel("Milisegundos por tick (ENTER para aplicar):");
+        etiquetaMs.setForeground(Color.WHITE);
+        etiquetaMs.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
+        campoMsTick = new JTextField(4);
+        campoMsTick.setHorizontalAlignment(JTextField.CENTER);
+        campoMsTick.setBackground(Color.BLACK);
+        campoMsTick.setForeground(Color.WHITE);
+        campoMsTick.setCaretColor(Color.WHITE);
+        campoMsTick.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
+        campoMsTick.setText(String.valueOf(msPorTick));
+        campoMsTick.addActionListener(e -> {
+            aplicarMsPorTick();
+            requestFocusInWindow();
+        });
+        campoMsTick.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                aplicarMsPorTick();
+            }
+        });
+
+        JPanel filaMs = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 2));
+        filaMs.setBackground(Color.BLACK);
+        filaMs.add(etiquetaMs);
+        filaMs.add(campoMsTick);
+
+        JPanel sur = new JPanel(new BorderLayout());
+        sur.add(filaMs, BorderLayout.NORTH);
+        sur.add(ayuda, BorderLayout.SOUTH);
+        add(sur, BorderLayout.SOUTH);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                requestFocusInWindow();
+            }
+        });
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -90,11 +138,11 @@ public class VentanaJuego extends JFrame {
         tiempoAcumulado += ahora - ultimoInstante;
         ultimoInstante = ahora;
 
-        int ticks = (int) Math.min(tiempoAcumulado / NS_POR_TICK, MAX_TICKS_POR_FOTOGRAMA);
+        int ticks = (int) Math.min(tiempoAcumulado / nsPorTick, MAX_TICKS_POR_FOTOGRAMA);
         if (ticks == MAX_TICKS_POR_FOTOGRAMA) {
             tiempoAcumulado = 0;
         } else {
-            tiempoAcumulado -= ticks * NS_POR_TICK;
+            tiempoAcumulado -= ticks * nsPorTick;
         }
 
         // Aunque no haya ticks se redibuja, para que sigan las animaciones (boca, parpadeo)
@@ -105,6 +153,36 @@ public class VentanaJuego extends JFrame {
         panelInfo.actualizar(info.getPuntaje(), info.getEstado(), info.getPacman().getVidas());
         panelTablero.actualizar(info.getLaberinto(), info.getPacman(), info.getFantasmas(),
                                 info.getPuntaje(), info.getEstado());
+
+        boolean antesDeArrancar = info.getEstado().equals("INICIADO");
+        if (campoMsTick.isEnabled() != antesDeArrancar) {
+            campoMsTick.setEnabled(antesDeArrancar);
+            if (!antesDeArrancar) {
+                requestFocusInWindow();
+            }
+        }
+        String actual = String.valueOf(msPorTick);
+        if (!campoMsTick.hasFocus() && !campoMsTick.getText().equals(actual)) {
+            campoMsTick.setText(actual);
+        }
+    }
+
+    private void aplicarMsPorTick() {
+        if (!campoMsTick.isEnabled()) {
+            return;
+        }
+        String texto = campoMsTick.getText().trim();
+        
+        if (texto.matches("\\d{1,3}")) {
+            int ms = Integer.parseInt(texto);
+            if (ms >= MIN_MS_POR_TICK && ms <= MAX_MS_POR_TICK) {
+                msPorTick = ms;
+                nsPorTick = ms * 1_000_000L;
+                tiempoAcumulado = 0;
+                panelTablero.setMsPorTick(ms);
+            }
+        }
+        campoMsTick.setText(String.valueOf(msPorTick));
     }
 
     public void cerrar() {

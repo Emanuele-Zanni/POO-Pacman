@@ -44,11 +44,15 @@ public class PanelTablero extends JPanel {
     private String estado;
     private int cuadro;     // contador para animar la boca del Pacman y el parpadeo de los fantasmas
 
-    private final int msPorTick;
+    private int msPorTick;
 
     public PanelTablero(int msPorTick) {
         this.msPorTick = msPorTick;
         setBackground(FONDO);
+    }
+
+    public void setMsPorTick(int msPorTick) {
+        this.msPorTick = msPorTick;
     }
 
     public void actualizar(LaberintoDTO laberinto, PacmanDTO pacman, FantasmaDTO[] fantasmas,
