@@ -8,11 +8,13 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+
 public class PanelInfo extends JPanel {
 
     private final JLabel puntaje = crearEtiqueta();
     private final JLabel estado = crearEtiqueta();
     private final JLabel vidas = crearEtiqueta();
+    
 
     public PanelInfo() {
         setLayout(new BorderLayout());
@@ -37,4 +39,6 @@ public class PanelInfo extends JPanel {
         etiqueta.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
         return etiqueta;
     }
+
+
 }
